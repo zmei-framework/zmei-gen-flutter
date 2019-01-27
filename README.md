@@ -1,5 +1,6 @@
 # Flutter plugin for [Zmei generator](https://github.com/zmei-framework/generator)
-
+[![Maintainability](https://api.codeclimate.com/v1/badges/d63e77220053cccf31ec/maintainability)](https://codeclimate.com/github/zmei-framework/zmei-gen-flutter/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/d63e77220053cccf31ec/test_coverage)](https://codeclimate.com/github/zmei-framework/zmei-gen-flutter/test_coverage)
 [![Build Status](https://travis-ci.org/zmei-framework/zmei-gen-flutter.svg?branch=master)](https://travis-ci.org/zmei-framework/zmei-gen-flutter)
 
 This is Zmei generator plugin that adds flutter generator support.
