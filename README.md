@@ -1,4 +1,6 @@
-# FLutter plugin for [Zmei generator](https://github.com/zmei-framework/generator)
+# Flutter plugin for [Zmei generator](https://github.com/zmei-framework/generator)
+
+[![Build Status](https://travis-ci.org/zmei-framework/zmei-gen-flutter.svg?branch=master)](https://travis-ci.org/zmei-framework/zmei-gen-flutter)
 
 This is Zmei generator plugin that adds flutter generator support.
 
