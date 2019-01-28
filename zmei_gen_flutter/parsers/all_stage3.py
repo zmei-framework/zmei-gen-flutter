@@ -1,5 +1,5 @@
-from zmei_gen_flutter.extras.page.flutter import FlutterPageExtraParserListener
+from zmei_gen_flutter.extensions.page.flutter import FlutterPageExtensionParserListener
 
 parsers = [
-    FlutterPageExtraParserListener,
+    FlutterPageExtensionParserListener,
 ]

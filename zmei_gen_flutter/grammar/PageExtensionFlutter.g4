@@ -1,5 +1,5 @@
 
-parser grammar PageExtraFlutter;
+parser grammar PageExtensionFlutter;
 
 options { tokenVocab=ZmeiLangSimpleLexer; }
 

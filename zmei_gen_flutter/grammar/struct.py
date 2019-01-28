@@ -4,5 +4,5 @@ application = {}
 models = {}
 
 pages = {
-    'an_flutter': 'PageExtraFlutter.g4',
+    'an_flutter': 'PageExtensionFlutter.g4',
 }

@@ -1,9 +1,9 @@
-from zmei_generator.domain.extras import PageExtra
+from zmei_generator.domain.extensions import PageExtension
 from zmei_generator.parser.gen.ZmeiLangParser import ZmeiLangParser
 from zmei_generator.parser.utils import BaseListener
 
 
-class FlutterPageExtra(PageExtra):
+class FlutterPageExtension(PageExtension):
 
     def __init__(self, page) -> None:
         super().__init__(page)
@@ -11,15 +11,15 @@ class FlutterPageExtra(PageExtra):
         self.include_child = False
 
 
-class FlutterPageExtraParserListener(BaseListener):
+class FlutterPageExtensionParserListener(BaseListener):
 
     def enterAn_flutter(self, ctx: ZmeiLangParser.An_flutterContext):
-        extra = FlutterPageExtra(self.page)
-        self.application.extras.append(
-            extra
+        extension = FlutterPageExtension(self.page)
+        self.application.extensions.append(
+            extension
         )
 
-        self.set_flutter(self.page, extra)
+        self.set_flutter(self.page, extension)
         print('Flutter', self.application)
         self.application.flutter = True
 
@@ -27,10 +27,10 @@ class FlutterPageExtraParserListener(BaseListener):
         if str(ctx.BOOL()) == 'true':
             self.page.flutter.include_child = True
 
-    def set_flutter(self, page, extra):
-        page._flutter = extra
+    def set_flutter(self, page, extension):
+        page._flutter = extension
 
         if page.get_parent():
             parent = page.get_parent()
             if not parent._flutter:
-                self.set_flutter(parent, extra)
+                self.set_flutter(parent, extension)

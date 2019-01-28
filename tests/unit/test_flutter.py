@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from zmei_gen_flutter.extras.page.flutter import FlutterPageExtra
+from zmei_gen_flutter.extensions.page.flutter import FlutterPageExtension
 from zmei_generator.parser.parser import ZmeiParser
 
 
@@ -27,7 +27,7 @@ def test_page_flutter():
     boo = app.pages['boo']
 
     assert boo.name == 'boo'
-    assert isinstance(boo.flutter, FlutterPageExtra)
+    assert isinstance(boo.flutter, FlutterPageExtension)
 
 
 def test_page_flutter_parent_is_also_flutter():
@@ -50,8 +50,8 @@ def test_page_flutter_parent_is_also_flutter():
     foo = app.pages['foo']
 
     assert boo.name == 'boo'
-    assert isinstance(boo.flutter, FlutterPageExtra)
-    assert isinstance(foo.flutter, FlutterPageExtra)
+    assert isinstance(boo.flutter, FlutterPageExtension)
+    assert isinstance(foo.flutter, FlutterPageExtension)
 
 
 def test_page_flutter_child_if_not_marked():
@@ -70,7 +70,7 @@ def test_page_flutter_child_if_not_marked():
     boo = app.pages['boo']
 
     assert boo.name == 'boo'
-    assert isinstance(foo.flutter, FlutterPageExtra)
+    assert isinstance(foo.flutter, FlutterPageExtension)
     assert foo.flutter.include_child is False
     assert not boo.flutter
 
@@ -91,10 +91,10 @@ def test_page_flutter_child_if_marked():
     boo = app.pages['boo']
 
     assert boo.name == 'boo'
-    assert isinstance(foo.flutter, FlutterPageExtra)
+    assert isinstance(foo.flutter, FlutterPageExtension)
     print(foo.flutter.include_child)
     assert foo.flutter.include_child is True
-    assert isinstance(boo.flutter, FlutterPageExtra)
+    assert isinstance(boo.flutter, FlutterPageExtension)
 
 
 def test_page_flutter_child_if_marked_deeper():
@@ -115,10 +115,10 @@ def test_page_flutter_child_if_marked_deeper():
     zoo = app.pages['zoo']
 
     assert boo.name == 'boo'
-    assert isinstance(foo.flutter, FlutterPageExtra)
+    assert isinstance(foo.flutter, FlutterPageExtension)
     assert foo.flutter.include_child is True
 
-    assert isinstance(boo.flutter, FlutterPageExtra)
-    assert isinstance(zoo.flutter, FlutterPageExtra)
+    assert isinstance(boo.flutter, FlutterPageExtension)
+    assert isinstance(zoo.flutter, FlutterPageExtension)
     assert zoo.flutter is foo.flutter
 
