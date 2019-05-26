@@ -34,8 +34,8 @@ def find_package_data(*allowed_extensions):
 
 
 setup(
-    name='zmei-gen-flutter',
-    version='0.1.2',
+        name='zmei-gen-flutter',
+    version='0.1.3',
     packages=find_packages(),
     url='',
     license='GPLv3',

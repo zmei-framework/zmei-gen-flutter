@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:my_app/src/app.dart';
 import 'package:fluro/fluro.dart';
 
-{% for app_name, app in apps.items() %}{% if app.flutter %}{% for name, page in app.pages.items() %}{% if page.flutter and page.uri -%}
-import './pages/{{ app_name }}/{{ name }}_ui.dart';
+{% for app_name, app in apps.items() %}{% if app.pages_support(ext) %}{% for name, page in app.pages.items() %}{% if page.get_own_or_parent_extension(ext) and page.uri -%}
+import './ui/{{ app_name }}/{{ name }}_ui.dart';
 {% endif %}{% endfor %}{% endif %}{% endfor %}
 
 routeHandler(cls) {
@@ -24,9 +24,9 @@ configureRoutes(Router router) {
 }
 
 
-{% for app_name, app in apps.items() %}{% if app.flutter %}
+{% for app_name, app in apps.items() %}{% if app.pages_support(ext) %}
 class Routes{{ to_camel_case_classname(app_name) }} {
-    {% for name, page in app.pages.items() %}{% if page.flutter and page.uri -%}
+    {% for name, page in app.pages.items() %}{% if page.get_own_or_parent_extension(ext) and page.uri -%}
     String {{ to_camel_case(name) }}({% if page.uri_params %}{ {% for param in page.uri_params %}{{ to_camel_case(param) }}{% if not loop.last %}, {% endif %}{% endfor %} }{% endif %}) {
         return '{{ format_uri(page.uri) }}'{% for param in page.uri_params %}.replaceAll(':{{ param }}', {{ to_camel_case(param) }}.toString()){% endfor %};
     }
@@ -34,6 +34,6 @@ class Routes{{ to_camel_case_classname(app_name) }} {
 }
 {% endif %}{% endfor %}
 
-class Routes { {% for app_name, app in apps.items() %}{% if app.flutter %}
+class Routes { {% for app_name, app in apps.items() %}{% if app.pages_support(ext) %}
     final {{ to_camel_case(app_name) }} = Routes{{ to_camel_case_classname(app_name) }}();{% endif %}{% endfor %}
 }

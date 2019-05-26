@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+{{ extra_imports }}
+import '../../utils.dart';
 {% if page.functions %}
 import 'dart:convert';
 {% endif %}{% if page.get_parent() %}
-import '../{{ page.get_parent().application.app_name }}/{{ page.get_parent().name }}_ui.dart';{% else %}
+import '../../ui/{{ page.get_parent().application.app_name }}/{{ page.get_parent().name }}_ui.dart';{% else %}
 import '../../state.dart';
 {% endif %}
 import '../../app.dart';{% for import in imports %}import '../../models/{{ import }}.dart';
@@ -10,7 +12,9 @@ import '../../app.dart';{% for import in imports %}import '../../models/{{ impor
 import '../../components/menu.dart';
 
 abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ page.get_parent().view_name }}StateUi{% else %}PageState{% endif %} {
-
+    {%- for prefix, form in page.forms.items() %}
+    final _formKey{{ form.get_form_name() }} = GlobalKey<FormState>();
+    {% endfor %}
     {% if page.own_item_names %}
     {%- for key, (item, model) in page_items.items() -%}
     {% if not model %}dynamic {{ to_camel_case(key) }};
@@ -39,7 +43,7 @@ abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ pa
     }
     {% endif %}
     {% endif %}
-    {% if page.stream %}
+    {% if page.supports(stream_ext) %}
     @override
     void initState() {
         subscribeStream('/ws/pages/{{ page.application.app_name }}/{{ page.name }}');
@@ -71,31 +75,36 @@ abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ pa
         return callRemote('{{ name }}', [{% if func.args %}{{ func.render_python_args() }}{% endif %}]);
     }
     {% endfor %}
-    // {{ page.cruds }}
-    {%- for descriptor, crud_list in page.cruds.items() %}{%- for type, crud in crud_list.items() %}
-    Widget build{{ to_camel_case_classname(descriptor) }}{{ to_camel_case_classname(type) }}Ui(BuildContext context) {
-        {% if type == 'crud' %}
 
-            return Text('List');
+{#    render() {#}
+{#        return (#}
+{#            {{ source|indent(12) }}#}
+{#        );#}
+{#    }#}
+    {% if 'content' not in blocks %}
+    Widget buildContent(BuildContext context) {
+        return Center(
+            child: Text('{{ page.application.app_name }}.{{ page.name }}: Nothing here!'),
+        );
+    }
+    {% endif %}
+    {% for area, blocks in blocks.items() -%}
+    Widget build{{ area|capitalize }}(BuildContext context) {
+        return Column(
+                children: <Widget>[
+                        {% for block_ref, block in blocks -%}
+                            Expanded(child: {% if block_ref %}this.buildBlock{{ to_camel_case_classname(block_ref) }}(context){% else %}{{ block|indent(8) }}{% endif %}),
+                        {%- endfor %}
+                    ]
+                );
+    }
+    {% endfor %}
 
-        {% elif type == 'crud_create' %}
-
-            return Text('Create');
-
-        {% elif type == 'crud_delete' %}
-
-            return Text('Delete');
-
-        {% elif type == 'crud_detail' %}
-
-            return Text('Detail');
-
-        {% elif type == 'crud_edit' %}
-
-            return Text('Edit');
-
-        {% endif %}
-    }{% endfor %}{% endfor %}
+    {% for area, blocks in blocks.items() %}{% for block_ref, block in blocks if block_ref -%}
+    Widget buildBlock{{ to_camel_case_classname(block_ref) }}(BuildContext context) {
+        {{ block|indent(8) }}
+    }
+    {% endfor %}{% endfor %}
 
 
     {% if not page.get_parent() %}
@@ -119,13 +128,13 @@ abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ pa
           Widget buildFloatingActionButton() {
             return null;
           }
-        {% if not page.menus.flutter_bottom %}
+        {% if not page.supports(menu_ext) or not page[menu_ext].flutter_bottom %}
           Widget buildBottomMenu() {
             return null;
           }
         {% endif %}
 
-        {% if not page.menus.flutter_drawer %}
+        {% if not page.supports(menu_ext) or not page[menu_ext].flutter_drawer %}
           List<MenuItem> getDrawerMenuItems() {
             return <MenuItem>[];
           }
@@ -171,8 +180,9 @@ abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ pa
         return "{{ app_name.capitalize() }}{{ page.view_name }}";
     }
 
-    {% for menu_name, menu in page.menus.items() %}{% if menu_name.startswith('flutter_') %}
+    {% if page.supports(menu_ext) %}{% for menu_name, menu in page[menu_ext].items() %}{% if menu_name.startswith('flutter_') %}
     List<MenuItem> get{{ to_camel_case_classname(menu_name[8:]) }}MenuItems() {
+        // lalalala!
       return [
         {% for item in menu.items %}
         MenuItem(Icon(Icons.{% if item.args.icon %}{{ item.args.icon }}{% else %}list{% endif %}), '{{ item.label }}', App.url.{{ menu.render_ref(item) }}(){% if item.args %}{% for key, val in item.args.items() if key != 'icon' %}{% if loop.first %}, args: { {% endif %}'{{ key }}': '{{ val }}',{% if loop.last %} } {% endif %}{% endfor %}{% endif %}),
@@ -181,7 +191,7 @@ abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ pa
     }
     {% endif %}{% endfor %}
 
-    {% if page.menus.flutter_bottom %}{% with menu=page.menus.flutter_bottom %}
+    {% if page[menu_ext].flutter_bottom %}{% with menu=page[menu_ext].flutter_bottom %}
     Widget buildBottomMenu() {
       final items = getBottomMenuItems();
       int activeIndex = items.indexWhere((item) => item.isActive());
@@ -200,5 +210,5 @@ abstract class {{ page.view_name }}State extends {% if page.get_parent() %}{{ pa
               )
           );
     }
-    {% endwith %}{% endif %}
+    {% endwith %}{% endif %}{% endif %}
 }

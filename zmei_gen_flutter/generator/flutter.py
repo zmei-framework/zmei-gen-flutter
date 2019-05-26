@@ -1,16 +1,21 @@
 import os
+import re
 import subprocess
 
+from zmei_generator.contrib.channels.extensions.pages.stream import StreamPageExtension
 from zmei_generator.contrib.web.fields.relation import RelationDef
 from zmei_generator.domain.reference_field import ReferenceField
 from zmei_generator.generator.utils import generate_file, to_camel_case, format_uri, to_camel_case_classname
+from zmei_generator.contrib.web.extensions.page.crud import CrudPageExtension
+from zmei_generator.contrib.web.extensions.page.menu import MenuPageExtension
+
+from zmei_gen_flutter.extensions.page.flutter import FlutterPageExtension
 
 
 def generate(target_path, project):
     apps = project.applications
 
-    has_flutter = any([app.flutter for app in project.applications.values()])
-    print(has_flutter)
+    has_flutter = any([app.pages_support(FlutterPageExtension) for app in project.applications.values()])
 
     if not has_flutter:
         return
@@ -46,10 +51,12 @@ def generate(target_path, project):
                 }
             )
 
-        if application.flutter:
+        if application.pages_support(FlutterPageExtension):
             for name, page in application.pages.items():
-                if page.flutter:
+
+                if page.get_own_or_parent_extension(FlutterPageExtension):
                     imports = set()
+                    extra_imports = ''
 
                     page_items = {}
                     for item_name in page.own_item_names:
@@ -57,12 +64,27 @@ def generate(target_path, project):
 
                         if item.model_name:
                             col = application.resolve_model(item.model_name)
-                            if col.application != application:
-                                imports.add(col.application.app_name)
+                            # if col.application != application:
+                            imports.add(col.application.app_name)
 
                             page_items[item_name] = (item, col)
                         else:
                             page_items[item_name] = (item, None)
+
+                    blocks_rendered = {}
+                    for area, blocks in page.get_blocks(platform=FlutterPageExtension).items():
+                        blocks_rendered[area] = []
+                        for index, block in enumerate(blocks):
+                            rendered = block.render(area=area, index=index)
+
+                            filtered = ''
+                            for line in rendered.splitlines():
+                                if re.match("^\s*import\s+'[^']+'\s*;\s*$", line):
+                                    extra_imports += f"{line.strip()}\n"
+                                else:
+                                    filtered += f"{line.strip()}\n"
+
+                            blocks_rendered[area].append((block.ref, filtered))
 
                     generate_file(
                         target_path,
@@ -71,8 +93,13 @@ def generate(target_path, project):
                             'app_name': app_name,
                             'app': application,
                             'page': page,
+                            'blocks': blocks_rendered,
+                            'crud_ext': CrudPageExtension,
+                            'menu_ext': MenuPageExtension,
+                            'stream_ext': StreamPageExtension,
                             'page_items': page_items,
                             'imports': imports,
+                            'extra_imports': extra_imports,
                             'format_uri': format_uri,
                             'to_camel_case': to_camel_case,
                             'to_camel_case_classname': to_camel_case_classname,
@@ -80,7 +107,7 @@ def generate(target_path, project):
                     )
                     generate_file(
                         target_path,
-                        f'flutter/lib/src/pages/{app_name}/{name}_ui.dart',
+                        f'flutter/lib/src/ui/{app_name}/{name}_ui.dart',
                         'flutter.page.ui.dart.tpl', {
                             'app_name': app_name,
                             'app': application,
@@ -104,9 +131,9 @@ def generate(target_path, project):
     max_len = 0
     app_routes = {}
     for app_name, app in apps.items():
-        if app.flutter:
+        if app.pages_support(FlutterPageExtension):
             for name, page in app.pages.items():
-                if page.flutter and page.uri:
+                if page.get_own_or_parent_extension(FlutterPageExtension) and page.uri:
                     uri = format_uri(page.uri)
                     app_routes[uri] = f'{page.view_name}StateUi'
                     max_len = max(max_len, len(uri))
@@ -119,12 +146,12 @@ def generate(target_path, project):
             'app_routes': app_routes,
             'max_len': max_len,
             'len': len,
+            'ext': FlutterPageExtension,
             'format_uri': format_uri,
             'to_camel_case': to_camel_case,
             'to_camel_case_classname': to_camel_case_classname,
         }
     )
-
 
     flutter_dir = os.path.join(target_path, 'flutter')
     if os.path.exists(flutter_dir):

@@ -45,7 +45,8 @@ httpRequest(String url, {bool post=false, dynamic body}) async {
 
     if (post && body != null) {
         var data = json.encode(body);
-        request.headers.set(HttpHeaders.contentLengthHeader, data.length);
+        var dataRaw = utf8.encode(data);
+        request.headers.set(HttpHeaders.contentLengthHeader, dataRaw.length);
 
         request.write(data);
     }
